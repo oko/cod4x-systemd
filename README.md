@@ -45,3 +45,29 @@ compatibility via `context=` options on filesystem mounts.
     ```
 
     You can tweak the server config in `/etc/cod4x/main/server.cfg`.
+
+7. Start your instance:
+
+    ```
+    $ sudo systemctl start cod4x@main
+    $ sudo systemctl status cod4x@main
+    $ ps aux | grep cod4x18 \
+    root     3816737  0.0  0.0 231384  3776 ?        Ss   18:54   0:00 /bin/bash /usr/local/bin/cod4x.exec
+    root     3816744  0.0  0.0  20640  9664 ?        S    18:54   0:00 systemd-nspawn -D /var/lib/cod4x/main/overlay-rootfs/mount --volatile=overlay --bind-ro=/var/lib/cod4x/main/overlay-game/mount:/cod4x --as-pid2 --pipe --drop-capability=all --user=nobody bash -c cd /cod4x ; exec ./cod4x18_dedrun +exec server.cfg
+    nobody   3816751  0.8  0.1 704096 151496 ?       Ssl  18:54   0:09 ./cod4x18_dedrun +exec server.cfg
+    jokamoto 3838122  0.0  0.0 221436   796 pts/3    S+   19:13   0:00 grep --color=auto cod4x
+    ```
+
+## Multi-Instance
+
+This implementation uses `systemd` template units. To create another
+server instance:
+
+1. Create a new directory under `/etc/cod4x`, such as `searchonly` and
+   set up `env` and `server.cfg` files. Then tweak for whatever game
+   settings you need.
+2. Start the server:
+
+    ```
+    $ sudo systemctl start cod4x@searchonly
+    ```
