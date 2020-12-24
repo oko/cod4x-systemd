@@ -1,0 +1,22 @@
+#!/bin/bash
+set -eux
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+workdir="$(realpath "$WORKDIR")"
+squashfs="$(realpath "$SQUASHFS")"
+rootfs="$(realpath "$ROOTFS")"
+config="$(realpath "$CONFIG")"
+
+[[ -n "$workdir" ]] || exit 1
+[[ -d "$workdir" ]] || exit 1
+
+set +e
+
+systemd-nspawn \
+	-D "$workdir/overlay-rootfs/mount" \
+	--volatile=overlay \
+	--bind-ro="$workdir/overlay-game/mount":/cod4x \
+	--as-pid2 --pipe \
+	--drop-capability=all \
+	--user=nobody \
+	bash -c 'cd /cod4x ; exec ./cod4x18_dedrun +exec server.cfg' || exit 30

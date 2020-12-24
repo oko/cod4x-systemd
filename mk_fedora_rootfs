@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# mk_fedora_rootfs <output-squashfs-file>
+#
+set -euxo pipefail
+out="$1"
+if [[ "$USER" != root ]]; then
+	echo >&2 "not root"
+  exit 1
+fi
+if [[ -z "$out" ]]; then
+	echo >&2 "must specify output nonempty"
+	exit 1
+fi
+if [[ "$out" == / ]]; then
+	echo >&2 "why u use root?"
+	exit 1
+fi
+
+wd="$(mktemp -d)"
+dnf -y --releasever=33 --installroot="$wd" \
+	--disablerepo='*' --enablerepo=fedora --enablerepo=updates install \
+	dnf fedora-release-container glibc-minimal-langpack libstdc++.i686
+rm -f "$out"
+mksquashfs "$wd" "$out" -comp zstd
+
+[[ -n "$SUDO_USER" ]] && chown "$SUDO_USER" "$out"

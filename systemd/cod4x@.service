@@ -1,0 +1,17 @@
+[Unit]
+Description=COD4X Server %I
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/cod4x/%i/env
+Environment=CONFIG=/etc/cod4x/%i/server.cfg
+Environment=WORKDIR=/var/lib/cod4x/%i
+ExecStartPre=/usr/bin/mkdir -p $WORKDIR
+ExecStartPre=/usr/local/bin/cod4x.pre
+ExecStart=/usr/local/bin/cod4x.exec
+ExecStopPost=/usr/local/bin/cod4x.post
+KillSignal=SIGINT
+SuccessExitStatus=0 30
+
+[Install]
+WantedBy=multi-user.target

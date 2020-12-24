@@ -1,0 +1,33 @@
+#!/bin/bash
+set -eux
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+workdir="$(realpath "$WORKDIR")"
+squashfs="$(realpath "$SQUASHFS")"
+rootfs="$(realpath "$ROOTFS")"
+config="$(realpath "$CONFIG")"
+
+[[ -n "$workdir" ]] || exit 1
+[[ -d "$workdir" ]] || exit 1
+
+set +e
+
+if mount | grep "$workdir/overlay-game/mount"; then
+	umount "$workdir/overlay-game/mount"
+fi
+
+if mount | grep "$workdir/overlay-rootfs/mount"; then
+	umount "$workdir/overlay-rootfs/mount"
+fi
+
+if mount | grep "$workdir/mount"; then
+	umount "$workdir/mount"
+fi
+
+if mount | grep "$workdir/rootfs"; then
+	umount "$workdir/rootfs"
+fi
+
+[[ -n "$workdir" ]] || exit 1
+[[ "$workdir" != "/" ]] || exit 1
+rm -rf "$workdir"/*

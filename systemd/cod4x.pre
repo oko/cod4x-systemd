@@ -1,0 +1,36 @@
+#!/bin/bash
+set -eux
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+workdir="$(realpath "$WORKDIR")"
+squashfs="$(realpath "$SQUASHFS")"
+rootfs="$(realpath "$ROOTFS")"
+config="$(realpath "$CONFIG")"
+
+[[ -n "$workdir" ]] || exit 1
+[[ -d "$workdir" ]] || exit 1
+
+set +e
+
+"$DIR/cod4x.post"
+
+mkdir "$workdir/mount" "$workdir/rootfs" "$workdir/overlay-game" "$workdir/overlay-rootfs"
+mount -t squashfs "$squashfs" -o context='"system_u:object_r:container_file_t:s0"' "$workdir/mount"
+mount -t squashfs "$rootfs" -o context='"system_u:object_r:container_file_t:s0"' "$workdir/rootfs"
+mkdir -p "$workdir/overlay-game/"{upper,work,mount}
+mkdir -p "$workdir/overlay-rootfs/"{upper,work,mount}
+chcon -R --reference "$workdir/mount/main" "$workdir/overlay-game" "$workdir/overlay-rootfs"
+mount -t overlay \
+	-o lowerdir="$workdir/mount",upperdir="$workdir/overlay-game/upper",workdir="$workdir/overlay-game/work",context='"system_u:object_r:container_file_t:s0"' \
+	none "$workdir/overlay-game/mount"
+mount -t overlay \
+	-o lowerdir="$workdir/rootfs",upperdir="$workdir/overlay-rootfs/upper",workdir="$workdir/overlay-rootfs/work",context='"system_u:object_r:container_file_t:s0"' \
+	none "$workdir/overlay-rootfs/mount"
+
+cat <<-EOF > "$workdir/overlay-rootfs/mount/etc/hosts"
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+127.0.0.1 cod4update.cod4x.me
+EOF
+
+cp "$config" "$workdir/overlay-game/mount/main/server.cfg"

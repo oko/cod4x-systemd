@@ -1,0 +1,14 @@
+[Unit]
+Description=COD4X Server
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/sysconfig/cod4x
+ExecStartPre=/usr/local/bin/cod4x.pre
+ExecStart=/usr/local/bin/cod4x.exec
+ExecStopPost=/usr/local/bin/cod4x.post
+KillSignal=SIGINT
+SuccessExitStatus=0 1
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# mk_cod4x_squashfs <cod4x-zipfile> <cod4-game-file-dir> <output-file> [<workdir>]
+#
+set -euxo pipefail
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+cod4x="$(realpath "$1")"
+cod4mp="$(realpath "$2")"
+output="$(realpath "$3")"
+work="${4:-"$(mktemp -d)"}"
+
+test -d "$cod4mp/main"
+test -d "$cod4mp/zone"
+pushd "$work"
+
+unzip -o "$cod4x"
+set +e
+
+rsync -av "$cod4mp/main/" cod4x-linux-server/main
+rsync -av "$cod4mp/zone/" cod4x-linux-server/zone
+chmod +x cod4x-linux-server/cod4x18_dedrun
+
+mkdir -p "$DIR/components"
+pushd cod4x-linux-server
+if [[ -f ../cod4x.squashfs ]]; then
+	rm ../cod4x.squashfs
+fi
+mksquashfs * "$out" -comp zstd -reproducible -mkfs-time 0 -all-time 0
+popd
+
+popd
